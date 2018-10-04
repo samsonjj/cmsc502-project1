@@ -60,7 +60,8 @@ float dynamicSolution() {
     }
 }
 
-int startDynamicSolution() {
+float startDynamicSolution() {
+
     unvisited.clear();
     for(unsigned i = 0; i < cities.size(); i++) {
         unvisited.push_back(i);
@@ -69,13 +70,7 @@ int startDynamicSolution() {
     // start solving
     source = 0;
     current = 0;
-    double min_dist = dynamicSolution();
-    for(int i = 1; i < cities.size(); i++) {
-        source = 1;
-        current = 1;
-        double dist = dynamicSolution();
-        if(dist < min_dist) min_dist = dist;
-    }
+    return dynamicSolution();
 }
 
 
@@ -90,8 +85,6 @@ int main() {
     file.open("cities.data");
     if (!file.is_open()) return 1;
 
-    vector<city> cities;
-
     // Read city data from file
     string x_pos;
     string y_pos;
@@ -103,6 +96,8 @@ int main() {
         newCity.y = atof(y_pos.c_str());
         cities.push_back(newCity);
     }
+
+    cout << "number of cities: " << cities.size() << endl;
 
     distances_array = new float*[cities.size()];
     for(int i = 0; i < cities.size(); i++) {
@@ -118,7 +113,7 @@ int main() {
 
     float dist = startDynamicSolution();
 
-    cout << dist << endl;
+    cout << "dist is " << dist << endl;
 
     return 0;
 }
