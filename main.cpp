@@ -6,6 +6,8 @@
 #include <vector>
 #include <cmath>
 
+#include <limits>
+
 
 /**
  * This program will use a sequential dynamic TSP solution. Function is given S=unvisited cities, and s=source city, c=current city,
@@ -21,11 +23,13 @@ struct city {
     float y;
 };
 
-vector<city> cities;
-
+// algorithm variables
 int source;
 int current;
+vector<city> cities;
 vector<int> unvisited;
+
+// distances array
 float** distances_array;
 
 float getDist(int city1, int city2) {
@@ -33,17 +37,14 @@ float getDist(int city1, int city2) {
 }
 
 float dynamicSolution() {
-    if(unvisited.size() == 1) {
+    if(unvisited.size() == 0) {
         return getDist(current, source);
     } else {
         // explore all unvisited, ignore source
         float store_current = current;
         int nextCity;
-        float min_dist = 1000000000;
+        float min_dist = numeric_limits<float>::max();
         for(int i = 0; i < unvisited.size(); i++) {
-            // ignore source
-            if(unvisited[i] == source) continue;
-            // now do recursion
 
             // set the new current
             nextCity = unvisited[i];
@@ -63,7 +64,9 @@ float dynamicSolution() {
 float startDynamicSolution() {
 
     unvisited.clear();
-    for(unsigned i = 0; i < cities.size(); i++) {
+
+    // start at 1 since 0 will be source, and will count as visited
+    for(unsigned i = 1; i < cities.size(); i++) {
         unvisited.push_back(i);
     }
 
@@ -73,32 +76,24 @@ float startDynamicSolution() {
     return dynamicSolution();
 }
 
-
-
-
-int main() {
-
-    cout << "Project starting." << endl;
-
-    // Open the file
+int readInCities() {
     ifstream file;
     file.open("cities.data");
-    if (!file.is_open()) return 1;
+    if (!file.is_open()) {
+        return 1;
+    }
 
-    // Read city data from file
     string x_pos;
     string y_pos;
-    while(file >> x_pos) {
-        file >> y_pos;
-
+    while(file >> x_pos >> y_pos) {
         city newCity;
         newCity.x = atof(x_pos.c_str());
         newCity.y = atof(y_pos.c_str());
         cities.push_back(newCity);
     }
+}
 
-    cout << "number of cities: " << cities.size() << endl;
-
+int computeDistancesArray() {
     distances_array = new float*[cities.size()];
     for(int i = 0; i < cities.size(); i++) {
         distances_array[i] = new float[cities.size()];
@@ -110,10 +105,20 @@ int main() {
             distances_array[i][j] = distance;
         }
     }
+}
+
+
+int main() {
+
+    readInCities();
+
+    cout << "number of cities: " << cities.size() << endl;
+
+    computeDistancesArray();
 
     float dist = startDynamicSolution();
 
-    cout << "dist is " << dist << endl;
+    cout << "minimum distance is " << dist << endl;
 
     return 0;
 }
