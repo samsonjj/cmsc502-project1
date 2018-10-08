@@ -16,14 +16,18 @@ int computeDistanceArray(thread_vars *vars, std::vector<city> cities) {
     }
 }
 
-float dynamicSolution(thread_vars *vars) {
+solution dynamicSolution(thread_vars *vars) {
     if(vars->unvisited.size() == 0) {
-        return vars->distance_array[vars->current][vars->source];
+        solution sol;
+        sol.distance = vars->distance_array[vars->current][vars->source];
+        sol.last_city = vars->current;
+        return sol;
     } else {
         // explore all unvisited, ignore source
         float store_current = vars->current;
         int nextCity;
         float min_dist = std::numeric_limits<float>::max();
+        int min_last_city;
         for(int i = 0; i < vars->unvisited.size(); i++) {
 
             // set the new current
@@ -32,16 +36,21 @@ float dynamicSolution(thread_vars *vars) {
 
             // set the city as visited, then check, then set as unvisited again afterwards
             vars->unvisited.erase(vars->unvisited.begin() + i);
-            float dist = vars->distance_array[vars->current][vars->source] + dynamicSolution(vars);
+            solution dSol = dynamicSolution(vars);
+            float dist = vars->distance_array[vars->current][vars->source] + dSol.distance;
             vars->unvisited.insert(vars->unvisited.begin() + i, nextCity);
             if(dist < min_dist) min_dist = dist;
         }
         vars->current = store_current;
-        return min_dist;
+        solution sol;
+        sol.distance = min_dist;
+        sol.last_city = min_last_city;
+
+        return sol;
     }
 }
 
-float startDynamicSolution(thread_vars *vars, std::vector<city> cities) {
+solution startDynamicSolution(thread_vars *vars, std::vector<city> cities) {
 
     vars->unvisited.clear();
 

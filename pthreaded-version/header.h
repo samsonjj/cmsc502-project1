@@ -1,6 +1,6 @@
 
 #include <stdio.h>
-#include <mpi.h>
+//#include <mpi.h>
 
 #include <vector>
 #include <limits>
@@ -21,4 +21,9 @@ struct thread_vars {
     int current;
     std::vector<int> unvisited;
     float** distance_array;
+};
+
+struct solution {
+    int last_city;
+    float distance;
 };

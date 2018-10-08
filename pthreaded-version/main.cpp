@@ -85,11 +85,14 @@ int main() {
 
     vector<vector<vector<city>>> blocks(GRID_LENGTH);
     for(int i = 0; i < GRID_LENGTH; i++) {
+        int chunk_size = floor(1.0 * rows[i].size() / GRID_LENGTH);
+        int extra = rows[i].size() % GRID_LENGTH;
         for(int j = 0; j < GRID_LENGTH; j++) {
             cout << "beginning of loop" << endl;
-            int chunk_size = ceil(1.0 * rows[i].size() / GRID_LENGTH);
-            vector<city>::iterator start = rows[i].begin() + chunk_size * j;
-            vector<city>::iterator end = min(rows[i].begin() + chunk_size * (j+1), rows[i].end());
+            // the extra part is to make sure we include all the elements, since chunk size is taken with a FLOOR operation...
+            // witout extra, some elements may be cut out
+            vector<city>::iterator start = rows[i].begin() + chunk_size * j + min(j, extra);
+            vector<city>::iterator end = rows[i].begin() + chunk_size * (j+1) + min(j+1, extra);
             cout << "something1" << endl;
             vector<city> newVector(start, end);
             cout << newVector.size() << endl;
@@ -114,7 +117,7 @@ int main() {
             vector<city> cities = blocks[i][j];
             //float dist = startDynamicSolution();
             thread_vars *vars;
-            cout << startDynamicSolution(vars, cities) << endl;
+            cout << startDynamicSolution(vars, cities).distance << endl;
         }
     }
 
