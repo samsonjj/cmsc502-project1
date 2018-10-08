@@ -1,14 +1,4 @@
-#include <stdio.h>
-#include <mpi.h>
-
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <cmath>
-
-#include <limits>
-
-#include<bits/stdc++.h>
+#include "tsp.cpp"
 
 /**
  * This program will use a sequential dynamic TSP solution. Function is given S=unvisited cities, and s=source city, c=current city,
@@ -20,19 +10,8 @@ using namespace std;
 
 const int GRID_LENGTH = 10;
 
-struct city {
-    float x;
-    float y;
-};
-
-// algorithm variables
-int source;
-int current;
-vector<city> cities;
-vector<int> unvisited;
-
 // distances array
-float** distances_array;
+vector<city> all_cities;
 
 void printMatrix(float** matrix, int r, int c) {
 
@@ -44,49 +23,6 @@ void printMatrix(float** matrix, int r, int c) {
     }
 }
 
-float getDist(int city1, int city2) {
-    return distances_array[city1][city2];
-}
-
-float dynamicSolution() {
-    if(unvisited.size() == 0) {
-        return getDist(current, source);
-    } else {
-        // explore all unvisited, ignore source
-        float store_current = current;
-        int nextCity;
-        float min_dist = numeric_limits<float>::max();
-        for(int i = 0; i < unvisited.size(); i++) {
-
-            // set the new current
-            nextCity = unvisited[i];
-            current = unvisited[i];
-
-            // set the city as visited, then check, then set as unvisited again afterwards
-            unvisited.erase(unvisited.begin() + i);
-            float dist = getDist(store_current, nextCity) + dynamicSolution();
-            unvisited.insert(unvisited.begin() + i, nextCity);
-            if(dist < min_dist) min_dist = dist;
-        }
-        current = store_current;
-        return min_dist;
-    }
-}
-
-float startDynamicSolution() {
-
-    unvisited.clear();
-
-    // start at 1 since 0 will be source, and will count as visited
-    for(unsigned i = 1; i < cities.size(); i++) {
-        unvisited.push_back(i);
-    }
-
-    // start solving
-    source = 0;
-    current = 0;
-    return dynamicSolution();
-}
 
 int readInCities() {
     ifstream file;
@@ -101,21 +37,7 @@ int readInCities() {
         city newCity;
         newCity.x = atof(x_pos.c_str());
         newCity.y = atof(y_pos.c_str());
-        cities.push_back(newCity);
-    }
-}
-
-int computeDistancesArray() {
-    distances_array = new float*[cities.size()];
-    for(int i = 0; i < cities.size(); i++) {
-        distances_array[i] = new float[cities.size()];
-    }
-
-    for(int i = 0; i < cities.size(); i++) {
-        for(int j = 0; j < cities.size(); j++) {
-            float distance = sqrt((cities[i].x-cities[j].x)*(cities[i].x-cities[j].x) + (cities[i].y-cities[j].y)*(cities[i].y-cities[j].y));
-            distances_array[i][j] = distance;
-        }
+        all_cities.push_back(newCity);
     }
 }
 
@@ -134,18 +56,18 @@ int main() {
 
 
 
-    sort(cities.begin(), cities.end(), compareCitiesByY);
+    sort(all_cities.begin(), all_cities.end(), compareCitiesByY);
 
-    for(int i = 0; i < cities.size(); i++) {
-        cout << "City at (" << cities[i].x << "," << cities[i].y << ")" << endl;
+    for(int i = 0; i < all_cities.size(); i++) {
+        cout << "City at (" << all_cities[i].x << "," << all_cities[i].y << ")" << endl;
     }
 
 
     vector<vector<city>> rows;
     for(int i = 0; i < GRID_LENGTH; i++) {
-        int chunk_size = ceil(1.0 * cities.size() / GRID_LENGTH);
-        vector<city>::iterator start = cities.begin() + chunk_size * i;
-        vector<city>::iterator end = min(cities.begin() + chunk_size * (i+1), cities.end());
+        int chunk_size = ceil(1.0 * all_cities.size() / GRID_LENGTH);
+        vector<city>::iterator start = all_cities.begin() + chunk_size * i;
+        vector<city>::iterator end = min(all_cities.begin() + chunk_size * (i+1), all_cities.end());
         vector<city> newVector(start, end);
         cout << "start: " << &(*start)<< ", end: " << &(*end) << ", size: " << newVector.size() << endl;
         rows.push_back(newVector);
@@ -154,14 +76,23 @@ int main() {
     cout << "rows has " << rows.size() << endl;
     cout << "first of rows has " << rows[0].size() << endl;
 
+    for(int i = 0; i < rows.size(); i++) {
+        sort(rows[i].begin(), rows[i].end(), compareCitiesByX); 
+    }
+
+    cout << "after sorting" << endl;
+
+
     vector<vector<vector<city>>> blocks(GRID_LENGTH);
     for(int i = 0; i < GRID_LENGTH; i++) {
         for(int j = 0; j < GRID_LENGTH; j++) {
+            cout << "beginning of loop" << endl;
             int chunk_size = ceil(1.0 * rows[i].size() / GRID_LENGTH);
             vector<city>::iterator start = rows[i].begin() + chunk_size * j;
             vector<city>::iterator end = min(rows[i].begin() + chunk_size * (j+1), rows[i].end());
+            cout << "something1" << endl;
             vector<city> newVector(start, end);
-            cout << newVector.size();
+            cout << newVector.size() << endl;
             blocks[i].push_back(newVector);
         }
     }
@@ -170,11 +101,22 @@ int main() {
     cout << "number of blocks in first row " << blocks[0].size() << endl;
     cout << "number of cities in first block of first row " << blocks[0][0].size() << endl;
 
-    computeDistancesArray();
 
-    //float dist = startDynamicSolution();
+    vector<float> tsp;
 
-    //cout << "minimum distance is " << dist << endl;
+    for(int i = 0; i < blocks.size(); i++) {
+        for(int j = 0; j < blocks[i].size(); j++) {
+            cout << i << "," << j << " | ";
+            for(int k = 0; k < blocks[i][j].size(); k++) {
+                cout << blocks[i][j][k].x << " ";
+            }
+            cout << endl;
+            vector<city> cities = blocks[i][j];
+            //float dist = startDynamicSolution();
+            thread_vars *vars;
+            cout << startDynamicSolution(vars, cities) << endl;
+        }
+    }
 
     return 0;
 }
