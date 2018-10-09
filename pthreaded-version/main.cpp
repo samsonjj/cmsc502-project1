@@ -64,10 +64,11 @@ int main() {
 
 
     vector<vector<city>> rows;
+    int chunk_size = floor(1.0 * all_cities.size() / GRID_LENGTH);
+    int extra = all_cities.size() % GRID_LENGTH;
     for(int i = 0; i < GRID_LENGTH; i++) {
-        int chunk_size = ceil(1.0 * all_cities.size() / GRID_LENGTH);
-        vector<city>::iterator start = all_cities.begin() + chunk_size * i;
-        vector<city>::iterator end = min(all_cities.begin() + chunk_size * (i+1), all_cities.end());
+        vector<city>::iterator start = all_cities.begin() + chunk_size * i + min(i, extra);
+        vector<city>::iterator end = all_cities.begin() + chunk_size * (i+1) + min(i+1, extra);
         vector<city> newVector(start, end);
         cout << "start: " << &(*start)<< ", end: " << &(*end) << ", size: " << newVector.size() << endl;
         rows.push_back(newVector);
@@ -85,8 +86,8 @@ int main() {
 
     vector<vector<vector<city>>> blocks(GRID_LENGTH);
     for(int i = 0; i < GRID_LENGTH; i++) {
-        int chunk_size = floor(1.0 * rows[i].size() / GRID_LENGTH);
-        int extra = rows[i].size() % GRID_LENGTH;
+        chunk_size = floor(1.0 * rows[i].size() / GRID_LENGTH);
+        extra = rows[i].size() % GRID_LENGTH;
         for(int j = 0; j < GRID_LENGTH; j++) {
             cout << "beginning of loop" << endl;
             // the extra part is to make sure we include all the elements, since chunk size is taken with a FLOOR operation...
@@ -105,19 +106,21 @@ int main() {
     cout << "number of cities in first block of first row " << blocks[0][0].size() << endl;
 
 
+    thread_vars *vars;
     vector<float> tsp;
-
     for(int i = 0; i < blocks.size(); i++) {
         for(int j = 0; j < blocks[i].size(); j++) {
-            cout << i << "," << j << " | ";
+            cout << i << "," << j << " | " << std::flush;
             for(int k = 0; k < blocks[i][j].size(); k++) {
+                cout << blocks[i][j].size() << "|";
                 cout << blocks[i][j][k].x << " ";
             }
             cout << endl;
             vector<city> cities = blocks[i][j];
             //float dist = startDynamicSolution();
-            thread_vars *vars;
-            cout << startDynamicSolution(vars, cities).distance << endl;
+            thread_vars *vars = new thread_vars();
+            solution s = startDynamicSolution(vars, cities);
+            cout << s.distance << endl;
         }
     }
 

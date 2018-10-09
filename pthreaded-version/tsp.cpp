@@ -1,6 +1,7 @@
 
 #include "header.h"
 
+using namespace std;
 
 int computeDistanceArray(thread_vars *vars, std::vector<city> cities) {
     vars->distance_array = new float*[cities.size()];
@@ -54,8 +55,11 @@ solution startDynamicSolution(thread_vars *vars, std::vector<city> cities) {
 
     vars->unvisited.clear();
 
+    cout << "startDynamic begin" << endl;
+
     // start at 1 since 0 will be source, and will count as visited
     for(unsigned i = 1; i < cities.size(); i++) {
+        cout << vars->unvisited.size() << endl;
         vars->unvisited.push_back(i);
     }
 
@@ -64,5 +68,7 @@ solution startDynamicSolution(thread_vars *vars, std::vector<city> cities) {
     // start solving
     vars->source = 0;
     vars->current = 0;
-    return dynamicSolution(vars);
+
+    solution theSolution = dynamicSolution(vars);
+    return theSolution;
 }
