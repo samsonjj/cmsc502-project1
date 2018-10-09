@@ -1,2 +1,2 @@
 program.exe : main.cpp tsp.cpp header.h
-	g++ main.cpp -o program.exe -g
+	g++ main.cpp -o program.exe -pthread -g

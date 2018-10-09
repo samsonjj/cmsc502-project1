@@ -33,13 +33,10 @@ int readInCities() {
 
     string x_pos;
     string y_pos;
-    int id = 0;
     while(file >> x_pos >> y_pos) {
         city newCity;
         newCity.x = atof(x_pos.c_str());
         newCity.y = atof(y_pos.c_str());
-        newCity.id = id;
-        id++;
         all_cities.push_back(newCity);
     }
 }
@@ -50,6 +47,12 @@ bool compareCitiesByX(city a, city b) {
 
 bool compareCitiesByY(city a, city b) {
     return a.y < b.y;
+}
+
+void *findAndStoreSolution(void* v) {
+    thread_vars* vars = (thread_vars*) v;
+    solution s = startDynamicSolution(vars, vars->cities);
+    vars->solutionArray[vars->i][vars->j] = s;
 }
 
 int main() {
@@ -107,18 +110,46 @@ int main() {
 
     thread_vars *vars;
     vector<float> tsp;
+    vector<city> cities_by_id;
+    solution **solutionArray = new solution*[blocks.size()];
+    pthread_t **threadArray = new pthread_t*[GRID_LENGTH];
+    int count = 0;
     for(int i = 0; i < blocks.size(); i++) {
+        solutionArray[i] = new solution[blocks[i].size()];
+        threadArray[i] = new pthread_t[GRID_LENGTH];
         for(int j = 0; j < blocks[i].size(); j++) {
             cout << i << "," << j << " | " << std::flush;
             for(int k = 0; k < blocks[i][j].size(); k++) {
                 cout << blocks[i][j][k].x << " ";
+                blocks[i][j][k].id = count;
+                count++;
+                cities_by_id.push_back(blocks[i][j][k]);
             }
-            cout << endl;
+            cout << endl; 
+
             vector<city> cities = blocks[i][j];
-            //float dist = startDynamicSolution();
             thread_vars *vars = new thread_vars();
-            solution s = startDynamicSolution(vars, cities);
-            cout << s.distance << endl;
+            vars->cities = cities;
+            vars->solutionArray = solutionArray;
+            vars->i = i;
+            vars->j = j;
+            pthread_create(&threadArray[i][j], NULL, findAndStoreSolution, (void *) vars);
+            
+        }
+    }
+
+    for(int i = 0; i < GRID_LENGTH; i++) {
+        for(int j = 0; j < GRID_LENGTH; j++) {
+            void *status;
+            pthread_join(threadArray[i][j], &status);
+        }
+    }
+    
+    for(int i = 0; i < blocks.size(); i++) {
+        for(int j = 0; j < blocks[i].size(); j++) {
+            
+            cout << solutionArray[i][j].distance << ", " << solutionArray[i][j].last_city << ", " << solutionArray[i][j].first_city << endl;
+
         }
     }
 

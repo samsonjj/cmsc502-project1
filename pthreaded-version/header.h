@@ -7,6 +7,7 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
+#include <pthread.h>
 
 #include<bits/stdc++.h>
 
@@ -17,14 +18,22 @@ struct city {
     int id;
 };
 
-struct thread_vars {
-    int source;
-    int current;
-    std::vector<int> unvisited;
-    float** distance_array;
-};
-
 struct solution {
+    int first_city;
     int last_city;
     float distance;
 };
+
+struct thread_vars {
+    int source;
+    int current;
+    int i;
+    int j;
+    std::vector<int> unvisited;
+    float** distance_array;
+    solution **solutionArray;
+    std::vector<city> cities;
+    std::vector<int> city_ids;
+};
+
+

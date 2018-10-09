@@ -20,8 +20,8 @@ int computeDistanceArray(thread_vars *vars, std::vector<city> cities) {
 solution dynamicSolution(thread_vars *vars) {
     if(vars->unvisited.size() == 0) {
         solution sol;
-        sol.distance = vars->distance_array[vars->current][vars->source];
-        sol.last_city = vars->current;
+        sol.distance = 0;
+        sol.last_city = vars->city_ids[vars->current];
         return sol;
     } else {
         // explore all unvisited, ignore source
@@ -40,7 +40,10 @@ solution dynamicSolution(thread_vars *vars) {
             solution dSol = dynamicSolution(vars);
             float dist = vars->distance_array[vars->current][vars->source] + dSol.distance;
             vars->unvisited.insert(vars->unvisited.begin() + i, nextCity);
-            if(dist < min_dist) min_dist = dist;
+            if(dist < min_dist) {
+                min_dist = dist;
+                min_last_city = dSol.last_city;
+            }
         }
         vars->current = store_current;
         solution sol;
@@ -59,6 +62,10 @@ solution startDynamicSolution(thread_vars *vars, std::vector<city> cities) {
     for(unsigned i = 1; i < cities.size(); i++) {
         vars->unvisited.push_back(i);
     }
+    
+    for(int i = 0; i < cities.size(); i++) {
+        vars->city_ids.push_back(cities[i].id);
+    }
 
     computeDistanceArray(vars, cities);
 
@@ -67,5 +74,6 @@ solution startDynamicSolution(thread_vars *vars, std::vector<city> cities) {
     vars->current = 0;
 
     solution theSolution = dynamicSolution(vars);
+    theSolution.first_city = vars->city_ids[0];
     return theSolution;
 }
