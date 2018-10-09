@@ -55,11 +55,8 @@ solution startDynamicSolution(thread_vars *vars, std::vector<city> cities) {
 
     vars->unvisited.clear();
 
-    cout << "startDynamic begin" << endl;
-
     // start at 1 since 0 will be source, and will count as visited
     for(unsigned i = 1; i < cities.size(); i++) {
-        cout << vars->unvisited.size() << endl;
         vars->unvisited.push_back(i);
     }
 

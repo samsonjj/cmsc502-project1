@@ -14,6 +14,7 @@
 struct city {
     float x;
     float y;
+    int id;
 };
 
 struct thread_vars {
