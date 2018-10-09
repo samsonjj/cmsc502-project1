@@ -1,2 +1,2 @@
-program : main.cpp tsp.cpp header.h
-	g++ main.cpp -o program -g
+program.exe : main.cpp tsp.cpp header.h
+	g++ main.cpp -o program.exe -g
