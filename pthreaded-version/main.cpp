@@ -63,7 +63,8 @@ int main(int argc, char* argv[]) {
 
     vector<city> all_cities = readInCities();
 
-    GRID_LENGTH = ceil(sqrt(1.0 * all_cities.size() / MAX_CITIES_PER_BLOCK));
+    if(argc > 1 && atoi(argv[1]) > 0) GRID_LENGTH = atoi(argv[1]);
+    else GRID_LENGTH = ceil(sqrt(1.0 * all_cities.size() / MAX_CITIES_PER_BLOCK));
 
     if(logLevel==1) cout << "Grid Length: " << GRID_LENGTH << endl;
 
