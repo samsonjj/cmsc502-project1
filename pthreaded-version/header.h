@@ -26,6 +26,9 @@ struct solution {
 
     // used in stitching
     int visited_cities;
+    
+    solution(void) { }
+    solution(float d, int last) : distance(d), last_city(last) { }
 };
 
 struct thread_vars {

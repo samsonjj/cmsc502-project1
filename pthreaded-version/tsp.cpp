@@ -7,21 +7,15 @@ int computeDistanceArray(thread_vars *vars, std::vector<city> cities) {
     vars->distance_array = new float*[cities.size()];
     for(int i = 0; i < cities.size(); i++) {
         vars->distance_array[i] = new float[cities.size()];
-    }
-
-    for(int i = 0; i < cities.size(); i++) {
         for(int j = 0; j < cities.size(); j++) {
-            float distance = calcDistance(cities[i].x, cities[i].y, cities[j].x, cities[j].y);
-            vars->distance_array[i][j] = distance;
+            vars->distance_array[i][j] = calcDistance(cities[i].x, cities[i].y, cities[j].x, cities[j].y);
         }
     }
 }
 
 solution dynamicSolution(thread_vars *vars) {
     if(vars->unvisited.size() == 0) {
-        solution sol;
-        sol.distance = 0;
-        sol.last_city = vars->cities[vars->currentPath.back()].id;
+        solution sol(0, vars->cities[vars->currentPath.back()].id);
         return sol;
     } else {
         // explore all unvisited, ignore source
@@ -44,10 +38,7 @@ solution dynamicSolution(thread_vars *vars) {
                 min_last_city = dSol.last_city;
             }
         }
-        solution sol;
-        sol.distance = min_dist;
-        sol.last_city = min_last_city;
-
+        solution sol(min_dist, min_last_city);
         return sol;
     }
 }
