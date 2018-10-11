@@ -11,7 +11,7 @@ int computeDistanceArray(thread_vars *vars, std::vector<city> cities) {
 
     for(int i = 0; i < cities.size(); i++) {
         for(int j = 0; j < cities.size(); j++) {
-            float distance = sqrt((cities[i].x-cities[j].x)*(cities[i].x-cities[j].x) + (cities[i].y-cities[j].y)*(cities[i].y-cities[j].y));
+            float distance = calcDistance(cities[i].x, cities[i].y, cities[j].x, cities[j].y);
             vars->distance_array[i][j] = distance;
         }
     }

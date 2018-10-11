@@ -23,6 +23,9 @@ struct solution {
     int last_city;
     float distance;
     bool visited;
+
+    // used in stitching
+    int visited_cities;
 };
 
 struct thread_vars {
@@ -37,4 +40,11 @@ struct thread_vars {
     std::vector<int> city_ids;
 };
 
+int NONE = 0;
+int FIRST= 1;
+int LAST = 2;
+int BOTH = 3;
 
+float calcDistance(float x1, float y1, float x2, float y2) {
+    sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y2-y2));
+}
