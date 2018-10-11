@@ -9,8 +9,9 @@
 #include <fstream>
 #include <pthread.h>
 
-#include<bits/stdc++.h>
-#include<sys/time.h>
+#include <bits/stdc++.h>
+#include <sys/time.h>
+#include <cstdint>
 
 struct city {
     float x;
