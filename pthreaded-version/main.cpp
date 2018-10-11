@@ -134,7 +134,7 @@ int main() {
         }
     }
 
-    /*
+    
 
     // use cities_by_id to go through cities
     // store what blocks are visited
@@ -152,9 +152,10 @@ int main() {
             unvisited.push_back(solutionArray[i][j]);
         }
     }
+    cout << "size: "  << unvisited.size() << endl;
 
     
-    float totalDistance = 0;
+    float totalDistance = solutionArray[0][0].distance;
     // go for all unvisited blocks
     for(int i = 0; i < GRID_LENGTH*GRID_LENGTH-1; i++) {
         float min_dist = numeric_limits<float>::max();
@@ -171,11 +172,12 @@ int main() {
             city city2 = cities_by_id[unvisited[j].last_city];
             float dist1 = calcDistance(fromCity.x, fromCity.y, city1.x, city1.y);
             float dist2 = calcDistance(fromCity.x, fromCity.y, city2.x, city2.y);
-            if(dist1 <= min_dist && dist2 <= min_dist) {
+            if(dist1 >= min_dist && dist2 >= min_dist) {
                 // neither of these is an estimated optimal route
                 continue;
             }
             // at this point we know we must change previous minimum
+            cout << min_block_index << endl;
             min_block_index = j;
             min_city = dist1<=dist2 ? FIRST : LAST;
             min_dist = min(dist1, dist2);  
@@ -187,6 +189,7 @@ int main() {
         // set block_*_visited_city to min_city
         // add the distance onto the total
         totalDistance += min_dist;
+        totalDistance += unvisited[min_block_index].distance;
         if(i == 0) {
             // first loop
             blocksAtEnd[1] = unvisited[min_block_index];
@@ -207,7 +210,7 @@ int main() {
     totalDistance += dist;
         
      
-*/
+
 
     for(int i = 0; i < blocks.size(); i++) {
         for(int j = 0; j < blocks[i].size(); j++) {
@@ -217,7 +220,7 @@ int main() {
         }
     }
 
-//    cout << "Final estimated distance: " << totalDistance << endl;
+    cout << "Final estimated distance: " << totalDistance << endl;
 
     
 

@@ -67,7 +67,6 @@ solution startDynamicSolution(thread_vars *vars, std::vector<city> cities) {
     vars->currentPath.push_back(0);
     
     computeDistanceArray(vars, cities);
-    printMatrix(vars->distance_array, cities.size(), cities.size()); 
 
     solution theSolution = dynamicSolution(vars);
     theSolution.first_city = vars->cities[0].id;
