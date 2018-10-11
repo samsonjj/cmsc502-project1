@@ -44,13 +44,8 @@ bool compareCitiesByY(city a, city b) {
 }
 
 
-void *findAndStoreSolution(void* v) {
-    thread_vars* vars = (thread_vars*) v;
-    solution s = startDynamicSolution(vars, vars->cities);
-    vars->solutionArray[vars->i][vars->j] = s;
-}
-
 int execMain(int rank, int nthreads, int argc, char* argv[]) {
+
     cout << "number of processors: " << nthreads << endl;
 
     struct timespec start, end;
@@ -114,45 +109,67 @@ int execMain(int rank, int nthreads, int argc, char* argv[]) {
     // create threads
     thread_vars *vars;
     vector<city> cities_by_id;
-    // store the "solutions" here, each containing the distance, first_city, and last_city in the path
-    solution **solutionArray = new solution*[blocks.size()];
-    pthread_t **threadArray = new pthread_t*[GRID_LENGTH];
     // for city ids
     int count = 0;
     for(int i = 0; i < blocks.size(); i++) {
-        solutionArray[i] = new solution[blocks[i].size()];
-        threadArray[i] = new pthread_t[GRID_LENGTH];
         for(int j = 0; j < blocks[i].size(); j++) {
             for(int k = 0; k < blocks[i][j].size(); k++) {
                 blocks[i][j][k].id = count;
                 count++;
                 cities_by_id.push_back(blocks[i][j][k]);
             }
-            vector<city> cities = blocks[i][j];
-            thread_vars *vars = new thread_vars();
-            vars->cities = cities;
-            vars->solutionArray = solutionArray;
-            vars->i = i;
-            vars->j = j;
-            pthread_create(&threadArray[i][j], NULL, findAndStoreSolution, (void *) vars);
-
+            // do some kind of data transfer here to the different threads
+            int numCities = blocks[i][j].size();
+            float x_coordinates[numCities];
+            float y_coordinates[numCities];
+            int ids[numCities];
+            for(int k = 0; k < numCities; k++) {
+                x_coordinates[k] = blocks[i][j][k].x; 
+                y_coordinates[k] = blocks[i][j][k].y; 
+                ids[k] = blocks[i][j][k].id;
+            }
+            int dest = i*GRID_LENGTH+j+1;
+            
+            MPI_Send(&numCities, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
+            MPI_Send(&x_coordinates, numCities, MPI_FLOAT, dest, 1, MPI_COMM_WORLD);
+            MPI_Send(&y_coordinates, numCities, MPI_FLOAT, dest, 2, MPI_COMM_WORLD);
+            MPI_Send(&ids, numCities, MPI_INT, dest, 3, MPI_COMM_WORLD);
+            
         }
     }
-
+    
+    // store the "solutions" here, each containing the distance, first_city, and last_city in the path
+    solution **solutionArray = new solution*[blocks.size()];
     for(int i = 0; i < GRID_LENGTH; i++) {
+        solutionArray[i] = new solution[blocks[i].size()];
         for(int j = 0; j < GRID_LENGTH; j++) {
-            void *status;
-            pthread_join(threadArray[i][j], &status);
+            int src = i*GRID_LENGTH+j+1;
+            int numCities = blocks[i][j].size();
+
+            float distance;
+            int first_city;
+            int last_city;
+
+            MPI_Recv(&distance, 1, MPI_FLOAT, src, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(&first_city, 1, MPI_INT, src, 5, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(&last_city, 1, MPI_INT, src, 6, MPI_COMM_WORLD, MPI_STATUS_IGNORE); 
+
+            solution sol;
+            sol.distance = distance;
+            sol.first_city = first_city;
+            sol.last_city = last_city;
+
+            solutionArray[i][j] = sol;
         }
     }
 
 
     /*
-    for(int i = 0; i < blocks.size(); i++) {
-        for(int j = 0; j < blocks[i].size(); j++) {
-                    }
-    }
-    */
+       for(int i = 0; i < blocks.size(); i++) {
+       for(int j = 0; j < blocks[i].size(); j++) {
+       }
+       }
+       */
 
 
 
@@ -270,6 +287,44 @@ int execMain(int rank, int nthreads, int argc, char* argv[]) {
 
 int execSlave(int rank) {
     cout << "rank: " << rank << endl;
+    
+    if(rank > GRID_LENGTH*GRID_LENGTH) {
+        // we don't need this process
+        // we already have enough to cover whole grid
+        return -1;
+    }
+
+    // need to get this from the main process
+    int numCities;
+
+    MPI_Recv(&numCities, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+    float x_coordinates[numCities];
+    float y_coordinates[numCities];
+    int ids[numCities];
+
+    MPI_Recv(x_coordinates, numCities, MPI_FLOAT, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(y_coordinates, numCities, MPI_FLOAT, 0, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(ids, numCities, MPI_INT, 0, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+
+    vector<city> cities;
+    for(int i = 0; i < numCities; i++) {
+        city newCity;
+        newCity.x = x_coordinates[i];
+        newCity.y = y_coordinates[i];
+        newCity.id = ids[i];
+    }
+    thread_vars *vars = new thread_vars();
+    vars->cities = cities;
+    solution sol = startDynamicSolution(vars, vars->cities);
+
+
+    // send back the results
+    MPI_Send(&sol.distance, 1, MPI_FLOAT, 0, 4, MPI_COMM_WORLD);
+    MPI_Send(&sol.first_city, 1, MPI_INT, 0, 5, MPI_COMM_WORLD);
+    MPI_Send(&sol.last_city, 1, MPI_INT, 0, 6, MPI_COMM_WORLD);
+
     return 0;
 }
 
@@ -281,6 +336,8 @@ int main(int argc, char* argv[]) {
     int rank, nthreads;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nthreads);
+
+    GRID_LENGTH = floor(sqrt(nthreads-1));
 
     if(rank==0) {
         execMain(rank, nthreads, argc, argv);

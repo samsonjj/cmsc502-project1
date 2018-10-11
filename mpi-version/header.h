@@ -39,9 +39,9 @@ struct thread_vars {
     std::vector<city> cities;
 
     // for writing
-    solution **solutionArray;
-    int i;
-    int j;
+    // solution **solutionArray;
+    // int i;
+    // int j;
 };
 
 int NONE = 0;
