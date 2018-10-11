@@ -8,7 +8,9 @@
 
 using namespace std;
 
-const int GRID_LENGTH = 10;
+const int MAX_CITIES_PER_BLOCK = 10;
+int GRID_LENGTH = 10;
+int logLevel = 1;
 
 // distances array
 vector<city> all_cities;
@@ -45,17 +47,21 @@ void *findAndStoreSolution(void* v) {
     vars->solutionArray[vars->i][vars->j] = s;
 }
 
-int main() {
+int main(int argc, char** argv) {
 
+    if(argc > 1 && argv[1]=="v") logLevel = 1;
 
     readInCities();
+    
+    GRID_LENGTH = ceil(sqrt(1.0 * all_cities.size() / MAX_CITIES_PER_BLOCK));
 
+    cout << "Grid Length: " << GRID_LENGTH << endl << endl;
 
 
     sort(all_cities.begin(), all_cities.end(), compareCitiesByY);
 
     for(int i = 0; i < all_cities.size(); i++) {
-        cout << "City at (" << setw(7) << all_cities[i].x << "," << setw(7) << all_cities[i].y << ")" << endl;
+        if(logLevel == 1) cout << "City at (" << setw(7) << all_cities[i].x << "," << setw(7) << all_cities[i].y << ")" << endl;
     }
 
 
@@ -87,15 +93,11 @@ int main() {
         }
     }
 
-    cout << "number of rows: " << blocks.size() << endl;
-    cout << "number of blocks in first row " << blocks[0].size() << endl;
-    cout << "number of cities in first block of first row " << blocks[0][0].size() << endl;
-    
     for(int i = 0; i < blocks.size(); i++) {
         for(int j = 0; j < blocks[i].size(); j++) {
-            cout << blocks[i][j].size() << " ";
+            if(logLevel==1) cout << blocks[i][j].size() << " ";
         }
-        cout << endl;
+        if(logLevel==1) cout << endl;
     }
 
     thread_vars *vars;
@@ -107,16 +109,17 @@ int main() {
     for(int i = 0; i < blocks.size(); i++) { solutionArray[i] = new solution[blocks[i].size()];
         threadArray[i] = new pthread_t[GRID_LENGTH];
         for(int j = 0; j < blocks[i].size(); j++) {
-            cout << i << "," << j << " | " << std::flush;
+            if(logLevel==1) cout << i << "," << j << " | " << std::flush;
             for(int k = 0; k < blocks[i][j].size(); k++) {
-                cout << blocks[i][j][k].x << " ";
+                if(logLevel==1) cout << "(" << blocks[i][j][k].x << "," << blocks[i][j][k].y << ") ";
                 blocks[i][j][k].id = count;
                 count++;
                 cities_by_id.push_back(blocks[i][j][k]);
             }
-            cout << endl; 
+            if(logLevel==1) cout << endl; 
 
             vector<city> cities = blocks[i][j];
+            //if(cities.size() == 0) continue;
             thread_vars *vars = new thread_vars();
             vars->cities = cities;
             vars->solutionArray = solutionArray;
@@ -152,7 +155,6 @@ int main() {
             unvisited.push_back(solutionArray[i][j]);
         }
     }
-    cout << "size: "  << unvisited.size() << endl;
 
     
     float totalDistance = solutionArray[0][0].distance;
@@ -168,7 +170,6 @@ int main() {
         // now go through all unvisited blocks and find the shortest distance to any first or last city on any of them
         for(int j = 0; j < unvisited.size(); j++) {
             city city1 = cities_by_id[unvisited[j].first_city];
-            cout << "last city: " << unvisited[j].last_city << endl;
             city city2 = cities_by_id[unvisited[j].last_city];
             float dist1 = calcDistance(fromCity.x, fromCity.y, city1.x, city1.y);
             float dist2 = calcDistance(fromCity.x, fromCity.y, city2.x, city2.y);
@@ -177,7 +178,6 @@ int main() {
                 continue;
             }
             // at this point we know we must change previous minimum
-            cout << min_block_index << endl;
             min_block_index = j;
             min_city = dist1<=dist2 ? FIRST : LAST;
             min_dist = min(dist1, dist2);  

@@ -12,7 +12,6 @@ int computeDistanceArray(thread_vars *vars, std::vector<city> cities) {
     for(int i = 0; i < cities.size(); i++) {
         for(int j = 0; j < cities.size(); j++) {
             float distance = calcDistance(cities[i].x, cities[i].y, cities[j].x, cities[j].y);
-            //cout << "distance: " << distance << "," << cities[i].x << "," << cities[i].y << "," << cities[j].x << "," << cities[j].y << endl;
             vars->distance_array[i][j] = distance;
         }
     }
@@ -40,9 +39,6 @@ solution dynamicSolution(thread_vars *vars) {
             vars->currentPath.pop_back();
 
             float dist = vars->distance_array[vars->currentPath.back()][vars->unvisited[i]] + dSol.distance;
-            /*if(dist > 1000000 && vars->unvisited.size() < 2) {
-                cout << vars->currentPath.back() << ", " << vars->unvisited[i] << ", " << vars->distance_array[vars->currentPath.back()][vars->unvisited[i]] << ", " << vars->cities[vars->unvisited[i]].x << endl;
-            }*/
             if(dist < min_dist) {
                 min_dist = dist;
                 min_last_city = dSol.last_city;
