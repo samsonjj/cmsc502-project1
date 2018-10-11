@@ -22,6 +22,7 @@ struct solution {
     int first_city;
     int last_city;
     float distance;
+    bool visited;
 };
 
 struct thread_vars {

@@ -144,7 +144,20 @@ int main() {
             pthread_join(threadArray[i][j], &status);
         }
     }
+
+
+    // use cities_by_id to go through cities
+    // store what cities are visited
+    // cycle through the 2 cities which are visited, but not fully connected, and find their closest non-visited city
+    // then link with them, calculate distance and add to total
+    int city_at_end_1 = 0;
+    int city_at_end_2;
     
+    for(int i = 0; i < GRID_LENGTH; i++) {
+        for(int j = 0; j < GRID_LENGTH; j++) {
+            
+
+
     for(int i = 0; i < blocks.size(); i++) {
         for(int j = 0; j < blocks[i].size(); j++) {
             
