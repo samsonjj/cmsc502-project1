@@ -54,8 +54,8 @@ void *findAndStoreSolution(void* v) {
 
 int main(int argc, char* argv[]) {
 
-    struct timeval stop, start;
-    gettimeofday(&start, NULL);
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 
     if(argc > 1 && strcmp(argv[1], "v")==0) logLevel = 1; // v for verbose
     else logLevel = 0;
@@ -241,9 +241,13 @@ int main(int argc, char* argv[]) {
     cout << totalDistance << endl;
 
 
-    gettimeofday(&stop, NULL);
-    printf("%lu, %lu\n", stop.tv_usec, start.tv_usec);
-    printf("took %lu\n", start.tv_usec - stop.tv_usec);
 
+    clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+    uint64_t delta_us = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
+    printf("%lu, %lu\n", end.tv_nsec, start.tv_nsec);
+    printf("took %lu\n", delta_us); 
+
+    cout << end.tv_sec - start.tv_sec << endl;
+    cout << delta_us << endl;
     return 0;
 }
