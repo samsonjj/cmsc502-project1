@@ -54,6 +54,9 @@ void *findAndStoreSolution(void* v) {
 
 int main(int argc, char* argv[]) {
 
+    struct timeval stop, start;
+    gettimeofday(&start, NULL);
+
     if(argc > 1 && strcmp(argv[1], "v")==0) logLevel = 1; // v for verbose
     else logLevel = 0;
 
@@ -67,7 +70,7 @@ int main(int argc, char* argv[]) {
 
     // seperate cities into rows
     sort(all_cities.begin(), all_cities.end(), compareCitiesByY);
-    vector<vector<city>> rows;
+    vector< vector<city> > rows;
     // ensure that we get each city exactly once
     int chunk_size = floor(1.0 * all_cities.size() / GRID_LENGTH);
     int extra = all_cities.size() % GRID_LENGTH;
@@ -82,7 +85,7 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < rows.size(); i++) {
         sort(rows[i].begin(), rows[i].end(), compareCitiesByX);
     }
-    vector<vector<vector<city>>> blocks(GRID_LENGTH);
+    vector< vector< vector<city> > > blocks(GRID_LENGTH);
     for(int i = 0; i < GRID_LENGTH; i++) {
         // ensure that we get each city exactly once
         chunk_size = floor(1.0 * rows[i].size() / GRID_LENGTH);
@@ -238,6 +241,9 @@ int main(int argc, char* argv[]) {
     cout << totalDistance << endl;
 
 
+    gettimeofday(&stop, NULL);
+    printf("%lu, %lu\n", stop.tv_usec, start.tv_usec);
+    printf("took %lu\n", start.tv_usec - stop.tv_usec);
 
     return 0;
 }

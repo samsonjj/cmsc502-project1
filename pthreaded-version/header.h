@@ -10,7 +10,7 @@
 #include <pthread.h>
 
 #include<bits/stdc++.h>
-
+#include<sys/time.h>
 
 struct city {
     float x;
