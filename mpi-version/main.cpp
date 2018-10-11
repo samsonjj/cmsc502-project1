@@ -286,9 +286,9 @@ int execMain(int rank, int nthreads, int argc, char* argv[]) {
 }
 
 int execSlave(int rank) {
-    cout << "rank: " << rank << endl;
     
     if(rank > GRID_LENGTH*GRID_LENGTH) {
+        cout << "unused rank: " << rank << endl;
         // we don't need this process
         // we already have enough to cover whole grid
         return -1;
@@ -318,9 +318,7 @@ int execSlave(int rank) {
     }
     thread_vars *vars = new thread_vars();
     vars->cities = cities;
-    cout << "BEFORE " << rank << endl;
     solution sol = startDynamicSolution(vars, vars->cities);
-    cout << "AFTER " << rank << endl;
 
 
     // send back the results
