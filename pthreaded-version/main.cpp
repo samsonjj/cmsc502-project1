@@ -13,16 +13,6 @@ const int GRID_LENGTH = 10;
 // distances array
 vector<city> all_cities;
 
-void printMatrix(float** matrix, int r, int c) {
-
-    for(int i = 0; i < r; i++) {
-        for(int j = 0; j < c; j++) {
-            cout << matrix[r][c] << " ";
-        }
-        cout << endl;
-    }
-}
-
 
 int readInCities() {
     ifstream file;
@@ -113,7 +103,8 @@ int main() {
     vector<city> cities_by_id;
     solution **solutionArray = new solution*[blocks.size()];
     pthread_t **threadArray = new pthread_t*[GRID_LENGTH];
-    int count = 0; for(int i = 0; i < blocks.size(); i++) { solutionArray[i] = new solution[blocks[i].size()];
+    int count = 0; 
+    for(int i = 0; i < blocks.size(); i++) { solutionArray[i] = new solution[blocks[i].size()];
         threadArray[i] = new pthread_t[GRID_LENGTH];
         for(int j = 0; j < blocks[i].size(); j++) {
             cout << i << "," << j << " | " << std::flush;
@@ -143,6 +134,7 @@ int main() {
         }
     }
 
+    /*
 
     // use cities_by_id to go through cities
     // store what blocks are visited
@@ -215,7 +207,7 @@ int main() {
     totalDistance += dist;
         
      
-
+*/
 
     for(int i = 0; i < blocks.size(); i++) {
         for(int j = 0; j < blocks[i].size(); j++) {
@@ -225,7 +217,7 @@ int main() {
         }
     }
 
-    cout << "Final estimated distance: " << totalDistance << endl;
+//    cout << "Final estimated distance: " << totalDistance << endl;
 
     
 

@@ -29,15 +29,15 @@ struct solution {
 };
 
 struct thread_vars {
-    int source;
-    int current;
-    int i;
-    int j;
+    std::vector<int> currentPath;
     std::vector<int> unvisited;
     float** distance_array;
-    solution **solutionArray;
     std::vector<city> cities;
-    std::vector<int> city_ids;
+
+    // for writing
+    solution **solutionArray;
+    int i;
+    int j;
 };
 
 int NONE = 0;
@@ -46,5 +46,17 @@ int LAST = 2;
 int BOTH = 3;
 
 float calcDistance(float x1, float y1, float x2, float y2) {
-    sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y2-y2));
+    return sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
 }
+
+void printMatrix(float** matrix, int r, int c) {
+
+    for(int i = 0; i < r; i++) {
+        for(int j = 0; j < c; j++) {
+            std::cout << matrix[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+
