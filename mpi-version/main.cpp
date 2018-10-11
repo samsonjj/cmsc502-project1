@@ -131,9 +131,9 @@ int execMain(int rank, int nthreads, int argc, char* argv[]) {
             int dest = i*GRID_LENGTH+j+1;
             
             MPI_Send(&numCities, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
-            MPI_Send(&x_coordinates, numCities, MPI_FLOAT, dest, 1, MPI_COMM_WORLD);
-            MPI_Send(&y_coordinates, numCities, MPI_FLOAT, dest, 2, MPI_COMM_WORLD);
-            MPI_Send(&ids, numCities, MPI_INT, dest, 3, MPI_COMM_WORLD);
+            MPI_Send(x_coordinates, numCities, MPI_FLOAT, dest, 1, MPI_COMM_WORLD);
+            MPI_Send(y_coordinates, numCities, MPI_FLOAT, dest, 2, MPI_COMM_WORLD);
+            MPI_Send(ids, numCities, MPI_INT, dest, 3, MPI_COMM_WORLD);
             
         }
     }
@@ -314,10 +314,13 @@ int execSlave(int rank) {
         newCity.x = x_coordinates[i];
         newCity.y = y_coordinates[i];
         newCity.id = ids[i];
+        cities.push_back(newCity);
     }
     thread_vars *vars = new thread_vars();
     vars->cities = cities;
+    cout << "BEFORE " << rank << endl;
     solution sol = startDynamicSolution(vars, vars->cities);
+    cout << "AFTER " << rank << endl;
 
 
     // send back the results
