@@ -1,37 +1,40 @@
+
 #include "tsp.cpp"
 
 /**
- * This program will use a sequential dynamic TSP solution. Function is given S=unvisited cities, and s=source city, c=current city,
- * and must find the shortest path from c back to source through unvisited cities
+ * Gives an approximate solution to the TSP. Seperates cities into "blocks" on a
+ * grid. Uses pthread solve a partial TSP for each block. Then connects the blocks
+ * using a stitching algorithm.
  */
-
 
 using namespace std;
 
 const int MAX_CITIES_PER_BLOCK = 10;
-int GRID_LENGTH = 10;
-int logLevel = 1;
-
-// distances array
-vector<city> all_cities;
+int GRID_LENGTH;
+int logLevel;
 
 
-int readInCities() {
+vector<city> readInCities() {
+
+    vector<city> all_cities;
+
     ifstream file;
     file.open("cities.data");
     if (!file.is_open()) {
-        return 1;
+        return all_cities;
     }
 
-    string x_pos;
-    string y_pos;
+    string x_pos, y_pos;
     while(file >> x_pos >> y_pos) {
         city newCity;
         newCity.x = atof(x_pos.c_str());
         newCity.y = atof(y_pos.c_str());
         all_cities.push_back(newCity);
     }
+
+    return all_cities;
 }
+
 
 bool compareCitiesByX(city a, city b) {
     return a.x < b.x;
@@ -41,31 +44,31 @@ bool compareCitiesByY(city a, city b) {
     return a.y < b.y;
 }
 
+
 void *findAndStoreSolution(void* v) {
     thread_vars* vars = (thread_vars*) v;
     solution s = startDynamicSolution(vars, vars->cities);
     vars->solutionArray[vars->i][vars->j] = s;
 }
 
-int main(int argc, char** argv) {
 
-    if(argc > 1 && argv[1]=="v") logLevel = 1;
+int main(int argc, char* argv[]) {
 
-    readInCities();
-    
+    if(argc > 1 && strcmp(argv[1], "v")==0) logLevel = 1; // v for verbose
+    else logLevel = 0;
+
+
+    vector<city> all_cities = readInCities();
+
     GRID_LENGTH = ceil(sqrt(1.0 * all_cities.size() / MAX_CITIES_PER_BLOCK));
 
-    cout << "Grid Length: " << GRID_LENGTH << endl << endl;
+    if(logLevel==1) cout << "Grid Length: " << GRID_LENGTH << endl;
 
 
+    // seperate cities into rows
     sort(all_cities.begin(), all_cities.end(), compareCitiesByY);
-
-    for(int i = 0; i < all_cities.size(); i++) {
-        if(logLevel == 1) cout << "City at (" << setw(7) << all_cities[i].x << "," << setw(7) << all_cities[i].y << ")" << endl;
-    }
-
-
     vector<vector<city>> rows;
+    // ensure that we get each city exactly once
     int chunk_size = floor(1.0 * all_cities.size() / GRID_LENGTH);
     int extra = all_cities.size() % GRID_LENGTH;
     for(int i = 0; i < GRID_LENGTH; i++) {
@@ -75,17 +78,16 @@ int main(int argc, char** argv) {
         rows.push_back(newVector);
     }
 
+    // split each row up into "columns"
     for(int i = 0; i < rows.size(); i++) {
-        sort(rows[i].begin(), rows[i].end(), compareCitiesByX); 
+        sort(rows[i].begin(), rows[i].end(), compareCitiesByX);
     }
-
     vector<vector<vector<city>>> blocks(GRID_LENGTH);
     for(int i = 0; i < GRID_LENGTH; i++) {
+        // ensure that we get each city exactly once
         chunk_size = floor(1.0 * rows[i].size() / GRID_LENGTH);
         extra = rows[i].size() % GRID_LENGTH;
         for(int j = 0; j < GRID_LENGTH; j++) {
-            // the extra part is to make sure we include all the elements, since chunk size is taken with a FLOOR operation...
-            // witout extra, some elements may be cut out
             vector<city>::iterator start = rows[i].begin() + chunk_size * j + min(j, extra);
             vector<city>::iterator end = rows[i].begin() + chunk_size * (j+1) + min(j+1, extra);
             vector<city> newVector(start, end);
@@ -93,31 +95,35 @@ int main(int argc, char** argv) {
         }
     }
 
-    for(int i = 0; i < blocks.size(); i++) {
-        for(int j = 0; j < blocks[i].size(); j++) {
-            if(logLevel==1) cout << blocks[i][j].size() << " ";
+
+    // print how many cities are in each block
+    if(logLevel == 1) {
+        cout << endl << "city distribution:" << endl;
+        for(int i = 0; i < blocks.size(); i++) {
+            for(int j = 0; j < blocks[i].size(); j++) {
+                if(logLevel==1) cout << blocks[i][j].size() << " ";
+            }
+            if(logLevel==1) cout << endl;
         }
-        if(logLevel==1) cout << endl;
     }
 
+
+    // create threads
     thread_vars *vars;
-    vector<float> tsp;
     vector<city> cities_by_id;
+    // store the "solutions" here, each containing the distance, first_city, and last_city in the path
     solution **solutionArray = new solution*[blocks.size()];
     pthread_t **threadArray = new pthread_t*[GRID_LENGTH];
-    int count = 0; 
+    // for city ids
+    int count = 0;
     for(int i = 0; i < blocks.size(); i++) { solutionArray[i] = new solution[blocks[i].size()];
         threadArray[i] = new pthread_t[GRID_LENGTH];
         for(int j = 0; j < blocks[i].size(); j++) {
-            if(logLevel==1) cout << i << "," << j << " | " << std::flush;
             for(int k = 0; k < blocks[i][j].size(); k++) {
-                if(logLevel==1) cout << "(" << blocks[i][j][k].x << "," << blocks[i][j][k].y << ") ";
                 blocks[i][j][k].id = count;
                 count++;
                 cities_by_id.push_back(blocks[i][j][k]);
             }
-            if(logLevel==1) cout << endl; 
-
             vector<city> cities = blocks[i][j];
             //if(cities.size() == 0) continue;
             thread_vars *vars = new thread_vars();
@@ -126,7 +132,6 @@ int main(int argc, char** argv) {
             vars->i = i;
             vars->j = j;
             pthread_create(&threadArray[i][j], NULL, findAndStoreSolution, (void *) vars);
-            
         }
     }
 
@@ -137,7 +142,14 @@ int main(int argc, char** argv) {
         }
     }
 
-    
+    if(logLevel == 1) {
+        cout << endl << "Cities: " << endl;
+        for(int i = 0; i < cities_by_id.size(); i++) {
+            cout << setw(10) << left << cities_by_id[i].id << setw(8) << cities_by_id[i].x << setw(8) << cities_by_id[i].y << endl;
+        }
+    }
+
+
 
     // use cities_by_id to go through cities
     // store what blocks are visited
@@ -156,7 +168,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    
+
     float totalDistance = solutionArray[0][0].distance;
     // go for all unvisited blocks
     for(int i = 0; i < GRID_LENGTH*GRID_LENGTH-1; i++) {
@@ -180,7 +192,7 @@ int main(int argc, char** argv) {
             // at this point we know we must change previous minimum
             min_block_index = j;
             min_city = dist1<=dist2 ? FIRST : LAST;
-            min_dist = min(dist1, dist2);  
+            min_dist = min(dist1, dist2);
         }
 
         // now travel to minimum city
@@ -201,28 +213,31 @@ int main(int argc, char** argv) {
         }
         unvisited.erase(unvisited.begin() + min_block_index);
 
-        
+
     }
     // dont forget to add the final closing distance at the end
     city fromCity = blocksAtEnd[0].visited_cities==FIRST ? cities_by_id[blocksAtEnd[0].last_city] : cities_by_id[blocksAtEnd[0].first_city];
     city toCity = blocksAtEnd[1].visited_cities==FIRST ? cities_by_id[blocksAtEnd[0].last_city] : cities_by_id[blocksAtEnd[0].first_city];
     float dist = calcDistance(fromCity.x, fromCity.y, toCity.x, toCity.y);
     totalDistance += dist;
-        
-     
 
 
-    for(int i = 0; i < blocks.size(); i++) {
-        for(int j = 0; j < blocks[i].size(); j++) {
-            
-            cout << solutionArray[i][j].distance << ", " << solutionArray[i][j].last_city << ", " << solutionArray[i][j].first_city << endl;
 
+    if(logLevel==1) {
+        cout << endl << "block solutions: " << endl;
+        for(int i = 0; i < blocks.size(); i++) {
+            for(int j = 0; j < blocks[i].size(); j++) {
+
+                cout << setw(4) << i << setw(4) << j << setw(10) << solutionArray[i][j].distance << endl;
+
+            }
         }
     }
 
-    cout << "Final estimated distance: " << totalDistance << endl;
+    if(logLevel==1) cout << endl << "Final estimated distance: ";
+    cout << totalDistance << endl;
 
-    
+
 
     return 0;
 }
