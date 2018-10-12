@@ -7,6 +7,7 @@
 #include <cmath>
 
 #include <limits>
+#include <cstdint>
 
 
 /**
@@ -109,6 +110,10 @@ int computeDistancesArray() {
 
 
 int main() {
+    
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+
 
     readInCities();
 
@@ -119,6 +124,12 @@ int main() {
     float dist = startDynamicSolution();
 
     cout << "minimum distance is " << dist << endl;
+
+    clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+    uint64_t delta_us = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
+    printf("took %lu\n", delta_us);
+
+
 
     return 0;
 }

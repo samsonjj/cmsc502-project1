@@ -1,2 +1,2 @@
 program : main.cpp
-	g++ main.cpp -o program.exe
+	g++ main.cpp -o program.exe -std=c++11
